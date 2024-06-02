@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "744644128541",
+    "project_id": "tracker-f7299",
+    "storage_bucket": "tracker-f7299.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:744644128541:android:44cd0ca7a6f2d15c02bbf4",
+        "android_client_info": {
+          "package_name": "com.exo.finance_tracker.finance_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0f8NLRfp4mFaU_7JKbQPXw00m9LDfKJc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
