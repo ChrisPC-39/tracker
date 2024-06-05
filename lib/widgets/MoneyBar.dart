@@ -42,8 +42,6 @@ class _MoneyBarState extends State<MoneyBar> {
         currency = "";
       }
     });
-
-    // _calculateTotalSpent(currency);
   }
 
   Future<void> _calculateTotalSpent(String currency) async {
@@ -79,161 +77,146 @@ class _MoneyBarState extends State<MoneyBar> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
-          .collection('transactions')
-          .where('timestamp',
-              isGreaterThanOrEqualTo:
-                  DateTime(DateTime.now().year, DateTime.now().month))
-          .where('timestamp',
-              isLessThan:
-                  DateTime(DateTime.now().year, DateTime.now().month + 1))
-          .where('currency', isEqualTo: currency)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        double total = 0;
-        for (QueryDocumentSnapshot doc in snapshot.data!.docs) {
-          total += ParseUtils.parseDoubleFromString(doc['total_price'].toString());
-        }
-
-        totalSpent = total;
-        progress = totalSpent / monthlyAllowance;
-        if (progress > 1.0) {
-          progress = 1.0;
-        } else if (progress < 0.0 || progress.isNaN) {
-          progress = 0.0;
-        }
-
-        return SizedBox(
-          height: 75,
-          child: RotatedBox(
-            quarterTurns: -1,
-            child: ListWheelScrollView(
-              itemExtent: 250,
-              onSelectedItemChanged: (newIndex) {},
-              children: List.generate(
-                currencies.length,
-                (index) => RotatedBox(
-                  quarterTurns: 1,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        currencies[index].toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            height: 25,
-                            width: 200,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Colors.grey[200],
-                            ),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: AnimatedContainer(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(15),
-                                  color: totalSpent > monthlyAllowance
-                                      ? Colors.red[300]
-                                      : Colors.purple[300],
-                                ),
-                                duration: const Duration(milliseconds: 300),
-                                width: currency == currencies[index] ? 200 * progress : 0,
-                                child: Container(),
-                              ),
-                            ),
-                          ),
-                          Text(
-                            "${currency == currencies[index] ? totalSpent.toStringAsFixed(2) : 0.0} / ${monthlyAllowance.toStringAsFixed(0)}",
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+    return SizedBox(
+      height: 75,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(currencies.length, (index) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                height: 8,
+                width: 8,
+                decoration: BoxDecoration(
+                  color: index == currentCurrencyIndex
+                      ? totalSpent > monthlyAllowance
+                          ? Colors.red[400]
+                          : Colors.purple[400]
+                      : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(50),
                 ),
-              ),
+              );
+            }),
+          ),
+          SizedBox(
+            height: 75,
+            child: PageView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: currencies.length,
+              onPageChanged: (newPageIndex) {
+                setState(() {
+                  currency = currencies[newPageIndex];
+                  currentCurrencyIndex = newPageIndex;
+                });
+              },
+              itemBuilder: (context, index) {
+                return _buildCurrency(index);
+              },
             ),
           ),
-          // child: ListView.builder(
-          //   itemCount: currencies.length,
-          //   scrollDirection: Axis.horizontal,
-          //   // onPageChanged: (index) {
-          //   //     // currency = currencies[index];
-          //   //     // currentCurrencyIndex = index;
-          //   //     // _calculateTotalSpent(currency);
-          //   // },
-          //   itemBuilder: (context, index) {
-          //     String currentCurrency = currencies[index];
-          //     return Column(
-          //       mainAxisAlignment: MainAxisAlignment.center,
-          //       children: [
-          //         Text(
-          //           currentCurrency.toUpperCase(),
-          //           style: const TextStyle(
-          //             fontSize: 20,
-          //             fontWeight: FontWeight.bold,
-          //           ),
-          //         ),
-          //         Stack(
-          //           alignment: Alignment.center,
-          //           children: [
-          //             Container(
-          //               height: 25,
-          //               width: 200,
-          //               decoration: BoxDecoration(
-          //                 borderRadius: BorderRadius.circular(15),
-          //                 color: Colors.grey[200],
-          //               ),
-          //               child: Align(
-          //                 alignment: Alignment.centerLeft,
-          //                 child: AnimatedContainer(
-          //                   decoration: BoxDecoration(
-          //                     borderRadius: BorderRadius.circular(15),
-          //                     color: totalSpent > monthlyAllowance
-          //                         ? Colors.red[300]
-          //                         : Colors.purple[300],
-          //                   ),
-          //                   duration: const Duration(milliseconds: 300),
-          //                   width: 200 * progress,
-          //                   child: Container(),
-          //                 ),
-          //               ),
-          //             ),
-          //             Text(
-          //               "${totalSpent.toStringAsFixed(2)} / ${monthlyAllowance.toStringAsFixed(0)}",
-          //               style: const TextStyle(
-          //                 color: Colors.black,
-          //                 fontWeight: FontWeight.bold,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       ],
-          //     );
-          //   },
-          // ),
-        );
-      },
+        ],
+      ),
+      // child: RotatedBox(
+      //   quarterTurns: -1,
+      //   child: ListWheelScrollView(
+      //     itemExtent: 250,
+      //     onSelectedItemChanged: (newIndex) {
+      //       currency = currencies[newIndex];
+      //       setState(() {});
+      //     },
+      //     children: List.generate(
+      //         currencies.length, (index) => _buildCurrency(index)),
+      //   ),
+      // ),
     );
+  }
+
+  Widget _buildCurrency(int index) {
+    return StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .collection('transactions')
+            .where('timestamp',
+                isGreaterThanOrEqualTo:
+                    DateTime(DateTime.now().year, DateTime.now().month))
+            .where('timestamp',
+                isLessThan:
+                    DateTime(DateTime.now().year, DateTime.now().month + 1))
+            .where('currency', isEqualTo: currency)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          double total = 0;
+          for (QueryDocumentSnapshot doc in snapshot.data!.docs) {
+            total +=
+                ParseUtils.parseDoubleFromString(doc['total_price'].toString());
+          }
+
+          totalSpent = total;
+          progress = totalSpent / monthlyAllowance;
+          if (progress > 1.0) {
+            progress = 1.0;
+          } else if (progress < 0.0 || progress.isNaN) {
+            progress = 0.0;
+          }
+
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                currencies[index].toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    height: 25,
+                    width: 200,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.grey[200],
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: AnimatedContainer(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          color: totalSpent > monthlyAllowance
+                              ? Colors.red[300]
+                              : Colors.purple[300],
+                        ),
+                        duration: const Duration(milliseconds: 300),
+                        width:
+                            currency == currencies[index] ? 200 * progress : 0,
+                        child: Container(),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "${currency == currencies[index] ? totalSpent.toStringAsFixed(2) : 0.0} / ${monthlyAllowance.toStringAsFixed(0)}",
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        });
   }
 }

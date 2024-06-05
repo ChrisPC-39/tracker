@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../widgets/ContrastCalculator.dart';
 import '../widgets/DateFormatter.dart';
 import '../widgets/MoneyBar.dart';
+import '../widgets/OptionsDialog.dart';
 import 'category_transaction_screen.dart';
 import 'new_transaction_screen.dart';
 import 'transaction_screen.dart';
@@ -18,6 +19,7 @@ class FinScreen extends StatefulWidget {
 }
 
 class _FinScreenState extends State<FinScreen> {
+  bool _isLoadingCategories = true;
   List<dynamic> categories = [];
   List<dynamic> currencies = [];
   List<dynamic> paymentTypes = [];
@@ -27,7 +29,11 @@ class _FinScreenState extends State<FinScreen> {
     super.initState();
 
     // Fetch category count from Firestore
-    FirebaseFirestore.instance
+    initCategories();
+  }
+
+  Future<void> initCategories() async {
+    await FirebaseFirestore.instance
         .collection('users')
         .doc(FirebaseAuth.instance.currentUser!.uid)
         .get()
@@ -36,8 +42,13 @@ class _FinScreenState extends State<FinScreen> {
         final category = snapshot.data()!['categories'] as List<dynamic>;
         setState(() {
           categories = category;
+          _isLoadingCategories = false;
         });
       }
+    });
+
+    setState(() {
+      _isLoadingCategories = false;
     });
   }
 
@@ -58,6 +69,7 @@ class _FinScreenState extends State<FinScreen> {
                     parentScreen: FinScreen(),
                     isCamera: false,
                     parentJson: {},
+                    parentCategory: "",
                   ),
                 ),
               );
@@ -75,6 +87,7 @@ class _FinScreenState extends State<FinScreen> {
                     parentScreen: FinScreen(),
                     isCamera: true,
                     parentJson: {},
+                    parentCategory: "",
                   ),
                 ),
               );
@@ -103,17 +116,25 @@ class _FinScreenState extends State<FinScreen> {
               background: const MoneyBar(),
             ),
           ),
-          categories.isEmpty
-              ? const SliverToBoxAdapter(
+          _isLoadingCategories
+              ? SliverToBoxAdapter(
                   child: Center(
-                    child: CircularProgressIndicator(),
+                    child: Column(
+                      children: [
+                        const CircularProgressIndicator(),
+                        _buildEmptyCategory(),
+                      ],
+                    ),
                   ),
                 )
               : SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    childCount: categories.length + 1,
+                    childCount: categories.length + 2,
                     (BuildContext context, int index) {
                       if (index == categories.length) {
+                        return _buildEmptyCategory();
+                      }
+                      if (index == categories.length + 1) {
                         return Container(height: 150);
                       }
                       return categoryStream(index);
@@ -123,6 +144,112 @@ class _FinScreenState extends State<FinScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildEmptyCategory() {
+    const String categoryTitle = "New category";
+    final int codepoint = Icons.add.codePoint;
+    final int colorValue = Colors.grey.value;
+
+    return Padding(
+      padding: const EdgeInsets.all(15),
+      child: Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () {},
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () async {
+                final user = await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .get();
+
+                Map<String, dynamic> newCategory = {
+                  'type': categoryTitle,
+                  'codepoint': codepoint,
+                  'colorValue': colorValue,
+                };
+
+                await user.reference.update({
+                  'categories': FieldValue.arrayUnion([newCategory])
+                });
+
+                initCategories();
+                setState(() {});
+              },
+              child: ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Color(colorValue),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    IconData(codepoint, fontFamily: 'MaterialIcons'),
+                    color: ContrastCalculator.getIconColor(
+                      Color(colorValue),
+                    ),
+                  ),
+                ),
+                title: const Text(categoryTitle),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> updateCategoryName(
+    Map<String, dynamic> userData,
+    int index,
+    DocumentReference ref,
+    String newVal,
+    int colorVal,
+    int codePoint,
+  ) async {
+    final itemCategories = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection('transactions')
+        .where('category', isEqualTo: userData['categories'][index]['type'])
+        .get();
+
+    for (var transaction in itemCategories.docs) {
+      transaction.reference.update({'category': newVal});
+    }
+
+    userData['categories'][index]['type'] = newVal;
+    userData['categories'][index]['colorValue'] = colorVal;
+    userData['categories'][index]['codepoint'] = codePoint;
+    ref.update({'categories': userData['categories']});
+  }
+
+  Future<void> removeCategory(
+    Map<String, dynamic> userData,
+    int index,
+    DocumentReference ref,
+  ) async {
+    final itemCategories = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection('transactions')
+        .where('category', isEqualTo: userData['categories'][index]['type'])
+        .get();
+
+    for (var transaction in itemCategories.docs) {
+      transaction.reference.update({'category': ''});
+    }
+
+    userData['categories'].removeAt(index);
+    ref.update({'categories': userData['categories']});
   }
 
   Widget categoryStream(int index) {
@@ -147,6 +274,8 @@ class _FinScreenState extends State<FinScreen> {
             type: type,
             colorValue: colorValue,
             codepoint: codepoint,
+            snapshot: snapshot,
+            index: index,
           );
         } else {
           return const Center(child: CircularProgressIndicator());
@@ -159,6 +288,8 @@ class _FinScreenState extends State<FinScreen> {
     required int codepoint,
     required int colorValue,
     required String type,
+    required int index,
+    required AsyncSnapshot<DocumentSnapshot<Object?>> snapshot,
   }) {
     return Padding(
       padding: const EdgeInsets.all(15),
@@ -169,6 +300,30 @@ class _FinScreenState extends State<FinScreen> {
             Padding(
               padding: const EdgeInsets.all(8),
               child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onLongPress: () {
+                  showOptionsDialog(
+                    actionText: "Delete",
+                    context: context,
+                    titleText: "Delete category",
+                    onPressed: () async {
+                      Map<String, dynamic> userData =
+                          snapshot.data!.data() as Map<String, dynamic>;
+                      final DocumentReference ref = snapshot.data!.reference;
+                      await removeCategory(
+                        userData,
+                        index,
+                        ref,
+                      );
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FinScreen(),
+                        ),
+                      );
+                    },
+                  );
+                },
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
@@ -176,11 +331,53 @@ class _FinScreenState extends State<FinScreen> {
                       builder: (context) => CategoryTransactionScreen(
                         parentScreen: const FinScreen(),
                         type: type,
+                        codePoint: codepoint,
+                        colorValue: colorValue,
+                        callBack: (newVal, colorValue, codepoint) {
+                          Map<String, dynamic> userData =
+                              snapshot.data!.data() as Map<String, dynamic>;
+                          final DocumentReference ref =
+                              snapshot.data!.reference;
+                          updateCategoryName(
+                            userData,
+                            index,
+                            ref,
+                            newVal,
+                            colorValue,
+                            codepoint,
+                          );
+                        },
                       ),
                     ),
                   );
                 },
                 child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  // onLongPress: () {
+                  //   showOptionsDialog(
+                  //     actionText: "Delete",
+                  //     context: context,
+                  //     titleText: "Delete category",
+                  //     onPressed: () async {
+                  //       Map<String, dynamic> userData =
+                  //           snapshot.data!.data() as Map<String, dynamic>;
+                  //       final DocumentReference ref = snapshot.data!.reference;
+                  //       await removeCategory(
+                  //         userData,
+                  //         index,
+                  //         ref,
+                  //       );
+                  //       Navigator.pushReplacement(
+                  //         context,
+                  //         MaterialPageRoute(
+                  //           builder: (context) => const FinScreen(),
+                  //         ),
+                  //       );
+                  //     },
+                  //   );
+                  // },
                   leading: Container(
                     width: 40,
                     height: 40,
@@ -257,8 +454,8 @@ class _FinScreenState extends State<FinScreen> {
               'timestamp': doc['timestamp']
             };
 
-
             return InkWell(
+              borderRadius: BorderRadius.circular(10),
               onTap: () {
                 Navigator.pushReplacement(
                   context,
@@ -266,8 +463,20 @@ class _FinScreenState extends State<FinScreen> {
                     builder: (context) => NewTransactionScreen(
                       parentScreen: const FinScreen(),
                       parentJson: jsonData,
+                      parentCategory: jsonData['category'],
                     ),
                   ),
+                );
+              },
+              onLongPress: () {
+                showOptionsDialog(
+                  titleText: "Delete transaction",
+                  context: context,
+                  actionText: "Delete",
+                  onPressed: () {
+                    doc.reference.delete();
+                    Navigator.of(context).pop();
+                  },
                 );
               },
               child: ListTile(

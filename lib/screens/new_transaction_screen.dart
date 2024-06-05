@@ -15,9 +15,11 @@ import '../utils/GeminiUtils.dart';
 import '../utils/ParseUtils.dart';
 import '../widgets/CustomSnackBar.dart';
 import '../widgets/MyTextfield.dart';
+import '../widgets/OptionsDialog.dart';
 
 class NewTransactionScreen extends StatefulWidget {
   final Widget parentScreen;
+  final String parentCategory;
   final Map<String, dynamic> parentJson;
   final bool isCamera;
 
@@ -26,6 +28,7 @@ class NewTransactionScreen extends StatefulWidget {
     required this.parentScreen,
     this.isCamera = false,
     required this.parentJson,
+    required this.parentCategory,
   }) : super(key: key);
 
   @override
@@ -50,7 +53,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
     "total_price": 0.0,
     "currency": "",
     "payment": "Card",
-    "category": "General",
+    "category": "",
   };
 
   List<dynamic> categories = [];
@@ -64,6 +67,8 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
     _loadUserData();
     if (widget.parentJson.isNotEmpty) {
       jsonData = widget.parentJson;
+    } else {
+      jsonData['category'] = widget.parentCategory;
     }
     if (widget.isCamera) {
       pickImageFromCamera();
@@ -246,15 +251,16 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                 child: const Icon(Icons.save_outlined),
                 onPressed: () async {
                   try {
-                    if(widget.parentJson.isNotEmpty) {
-                      final DocumentReference? transactionRef = await FirebaseFirestore
-                          .instance
-                          .collection('users')
-                          .doc(FirebaseAuth.instance.currentUser!.uid)
-                          .collection('transactions')
-                          .where('timestamp', isEqualTo: widget.parentJson['timestamp'])
-                          .get()
-                          .then((snapshot) {
+                    if (widget.parentJson.isNotEmpty) {
+                      final DocumentReference? transactionRef =
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .collection('transactions')
+                              .where('timestamp',
+                                  isEqualTo: widget.parentJson['timestamp'])
+                              .get()
+                              .then((snapshot) {
                         if (snapshot.docs.isNotEmpty) {
                           return snapshot.docs.first.reference;
                         } else {
@@ -269,7 +275,8 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                           .doc(FirebaseAuth.instance.currentUser!.uid)
                           .collection('transactions');
 
-                      jsonData['timestamp'] = Timestamp.fromDate(DateTime.now());
+                      jsonData['timestamp'] =
+                          Timestamp.fromDate(DateTime.now());
                       await transactions.add(jsonData);
                     }
 
@@ -662,6 +669,10 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
         }
       },
       items: [
+        const DropdownMenuItem(
+          value: '',
+          child: Text(''),
+        ),
         for (dynamic category in categories)
           DropdownMenuItem(
             value: category['type'],
@@ -851,7 +862,18 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                     ),
                   ),
                   onTap: () {
-                    _showOptionsDialog(context, index, setState);
+                    showOptionsDialog(
+                      context: context,
+                      titleText: "Delete transaction",
+                      actionText: "Delete",
+                      onPressed: () {
+                        setState(() {
+                          files.removeAt(index);
+                          erroneousFileIndices.remove(index);
+                        });
+                        Navigator.of(context).pop();
+                      },
+                    );
                   },
                 ),
               ),
@@ -900,93 +922,6 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Future<void> _showErrorsDialog() async {
-    String stringIndices =
-        erroneousFileIndices.map((index) => (index + 1).toString()).join(',');
-
-    return showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Error'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "No text has been detected in the following files: $stringIndices",
-                ),
-                const Text("\nDo you want to delete them automatically?"),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                "Cancel",
-                style: TextStyle(
-                  color: Colors.black,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                for (int i = 0; i < erroneousFileIndices.length; i++) {
-                  files.removeAt(erroneousFileIndices[i]);
-                }
-                erroneousFileIndices = [];
-                setState(() {});
-                Navigator.of(context).pop();
-              },
-              child: const Text("Delete and continue"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _showOptionsDialog(BuildContext context, int index,
-      Function(void Function()) setState) async {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Image Options'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    files.removeAt(index);
-                    erroneousFileIndices.remove(index);
-                  });
-                  Navigator.of(context).pop();
-                },
-                child: const Text("Delete"),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

@@ -29,6 +29,8 @@ class GeminiUtils {
     Map<String, dynamic> jsonData = jsonDecode(output);
     Map<String, dynamic> validatedJson = {};
 
+    print(jsonData);
+
     try {
       List<String> items = List<String>.from(jsonData['items']);
       validatedJson['items'] = items;
