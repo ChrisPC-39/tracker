@@ -1,4 +1,3 @@
-import 'package:finance_tracker/screens/getPictureTextScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -27,12 +26,11 @@ class MyApp extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        return const LoginScreen();
-        // if (snapshot.hasData) {
-        //   return const FinScreen();
-        // } else {
-        //   return const LoginScreen();
-        // }
+        if (snapshot.hasData) {
+          return const FinScreen();
+        } else {
+          return const LoginScreen();
+        }
       },
     );
   }

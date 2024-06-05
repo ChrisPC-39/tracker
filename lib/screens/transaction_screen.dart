@@ -61,8 +61,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
-          backgroundColor: Colors.lightGreen[400],
           appBar: AppBar(
+            elevation: 5,
             leading: IconButton(
               onPressed: () {
                 Navigator.pushReplacement(

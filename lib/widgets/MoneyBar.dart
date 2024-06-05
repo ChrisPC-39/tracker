@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../utils/ParseUtils.dart';
+
 class MoneyBar extends StatefulWidget {
   const MoneyBar({Key? key}) : super(key: key);
 
@@ -11,8 +13,8 @@ class MoneyBar extends StatefulWidget {
 
 class _MoneyBarState extends State<MoneyBar> {
   double progress = 0;
-  int monthlyAllowance = 0;
-  int totalSpent = 0;
+  double monthlyAllowance = 0;
+  double totalSpent = 0;
   String currency = "";
   List<dynamic> currencies = [];
   int currentCurrencyIndex = 0;
@@ -30,7 +32,8 @@ class _MoneyBarState extends State<MoneyBar> {
         .get();
 
     setState(() {
-      monthlyAllowance = userDoc.get('monthly_allowance') as int;
+      monthlyAllowance = ParseUtils.parseDoubleFromString(
+          userDoc['monthly_allowance'].toString());
       currencies = userDoc.get('currencies') as List<dynamic>;
 
       if (currencies.isNotEmpty) {
@@ -40,18 +43,7 @@ class _MoneyBarState extends State<MoneyBar> {
       }
     });
 
-    _calculateTotalSpent(currency);
-  }
-
-  int parseIntFromString(String str) {
-    // Replace commas with dots to handle European-style decimals
-    String normalizedStr = str.replaceAll(',', '.');
-
-    // Use double.parse to handle potential decimal values
-    double parsedValue = double.parse(normalizedStr);
-
-    // Convert to integer (truncates any decimals)
-    return parsedValue.toInt();
+    // _calculateTotalSpent(currency);
   }
 
   Future<void> _calculateTotalSpent(String currency) async {
@@ -69,9 +61,9 @@ class _MoneyBarState extends State<MoneyBar> {
         .where('currency', isEqualTo: currency)
         .get();
 
-    int total = 0;
+    double total = 0;
     for (QueryDocumentSnapshot doc in transactions.docs) {
-      total += parseIntFromString(doc['total_price']);
+      total += ParseUtils.parseDoubleFromString(doc['total_price']);
     }
 
     setState(() {
@@ -87,92 +79,161 @@ class _MoneyBarState extends State<MoneyBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(currencies.length, (index) {
-            return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              height: 8,
-              width: 8,
-              decoration: BoxDecoration(
-                color: index == currentCurrencyIndex
-                    ? totalSpent > monthlyAllowance
-                        ? Colors.red[400]
-                        : Colors.blue[400]
-                    : Colors.grey[300],
-                borderRadius: BorderRadius.circular(50),
-              ),
-            );
-          }),
-        ),
-        SizedBox(
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .collection('transactions')
+          .where('timestamp',
+              isGreaterThanOrEqualTo:
+                  DateTime(DateTime.now().year, DateTime.now().month))
+          .where('timestamp',
+              isLessThan:
+                  DateTime(DateTime.now().year, DateTime.now().month + 1))
+          .where('currency', isEqualTo: currency)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        double total = 0;
+        for (QueryDocumentSnapshot doc in snapshot.data!.docs) {
+          total += ParseUtils.parseDoubleFromString(doc['total_price'].toString());
+        }
+
+        totalSpent = total;
+        progress = totalSpent / monthlyAllowance;
+        if (progress > 1.0) {
+          progress = 1.0;
+        } else if (progress < 0.0 || progress.isNaN) {
+          progress = 0.0;
+        }
+
+        return SizedBox(
           height: 75,
-          child: PageView.builder(
-            itemCount: currencies.length,
-            onPageChanged: (index) {
-              setState(() {
-                currency = currencies[index];
-                currentCurrencyIndex = index;
-                _calculateTotalSpent(currency);
-              });
-            },
-            itemBuilder: (context, index) {
-              String currentCurrency = currencies[index];
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    currentCurrency.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Stack(
-                    alignment: Alignment.center,
+          child: RotatedBox(
+            quarterTurns: -1,
+            child: ListWheelScrollView(
+              itemExtent: 250,
+              onSelectedItemChanged: (newIndex) {},
+              children: List.generate(
+                currencies.length,
+                (index) => RotatedBox(
+                  quarterTurns: 1,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        height: 25,
-                        width: 200,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          color: Colors.grey[300],
-                        ),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            width: 200 * progress,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                color: totalSpent > monthlyAllowance
-                                    ? Colors.red[400]
-                                    : Colors.blue[400],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
                       Text(
-                        "${totalSpent.toStringAsFixed(0)} / ${monthlyAllowance.toStringAsFixed(0)}",
+                        currencies[index].toUpperCase(),
                         style: const TextStyle(
-                          color: Colors.black,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            height: 25,
+                            width: 200,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                              color: Colors.grey[200],
+                            ),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: AnimatedContainer(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  color: totalSpent > monthlyAllowance
+                                      ? Colors.red[300]
+                                      : Colors.purple[300],
+                                ),
+                                duration: const Duration(milliseconds: 300),
+                                width: currency == currencies[index] ? 200 * progress : 0,
+                                child: Container(),
+                              ),
+                            ),
+                          ),
+                          Text(
+                            "${currency == currencies[index] ? totalSpent.toStringAsFixed(2) : 0.0} / ${monthlyAllowance.toStringAsFixed(0)}",
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              );
-            },
+                ),
+              ),
+            ),
           ),
-        ),
-      ],
+          // child: ListView.builder(
+          //   itemCount: currencies.length,
+          //   scrollDirection: Axis.horizontal,
+          //   // onPageChanged: (index) {
+          //   //     // currency = currencies[index];
+          //   //     // currentCurrencyIndex = index;
+          //   //     // _calculateTotalSpent(currency);
+          //   // },
+          //   itemBuilder: (context, index) {
+          //     String currentCurrency = currencies[index];
+          //     return Column(
+          //       mainAxisAlignment: MainAxisAlignment.center,
+          //       children: [
+          //         Text(
+          //           currentCurrency.toUpperCase(),
+          //           style: const TextStyle(
+          //             fontSize: 20,
+          //             fontWeight: FontWeight.bold,
+          //           ),
+          //         ),
+          //         Stack(
+          //           alignment: Alignment.center,
+          //           children: [
+          //             Container(
+          //               height: 25,
+          //               width: 200,
+          //               decoration: BoxDecoration(
+          //                 borderRadius: BorderRadius.circular(15),
+          //                 color: Colors.grey[200],
+          //               ),
+          //               child: Align(
+          //                 alignment: Alignment.centerLeft,
+          //                 child: AnimatedContainer(
+          //                   decoration: BoxDecoration(
+          //                     borderRadius: BorderRadius.circular(15),
+          //                     color: totalSpent > monthlyAllowance
+          //                         ? Colors.red[300]
+          //                         : Colors.purple[300],
+          //                   ),
+          //                   duration: const Duration(milliseconds: 300),
+          //                   width: 200 * progress,
+          //                   child: Container(),
+          //                 ),
+          //               ),
+          //             ),
+          //             Text(
+          //               "${totalSpent.toStringAsFixed(2)} / ${monthlyAllowance.toStringAsFixed(0)}",
+          //               style: const TextStyle(
+          //                 color: Colors.black,
+          //                 fontWeight: FontWeight.bold,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ],
+          //     );
+          //   },
+          // ),
+        );
+      },
     );
   }
 }

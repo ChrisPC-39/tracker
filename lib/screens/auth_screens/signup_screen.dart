@@ -40,8 +40,8 @@ class _SignupScreenState extends State<SignupScreen> {
         'uid': userId,
         'email': userEmail,
         'currencies': [],
-        'monthly_allowance': 1000,
-        'paymentTypes': ['Card', 'Cash', 'None'],
+        'monthly_allowance': 1000.0,
+        'paymentTypes': ['Card', 'Cash', 'Other'],
         'categories': [
           {
             'codepoint': 58261,

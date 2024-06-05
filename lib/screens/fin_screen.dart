@@ -1,18 +1,13 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:finance_tracker/screens/category_transaction_screen.dart';
-import 'package:finance_tracker/screens/generative_transaction_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-import '../widgets/AnimatedGradient.dart';
 import '../widgets/ContrastCalculator.dart';
 import '../widgets/DateFormatter.dart';
-import '../widgets/GradientThemes.dart';
 import '../widgets/MoneyBar.dart';
+import 'category_transaction_screen.dart';
+import 'new_transaction_screen.dart';
 import 'transaction_screen.dart';
 
 class FinScreen extends StatefulWidget {
@@ -23,7 +18,7 @@ class FinScreen extends StatefulWidget {
 }
 
 class _FinScreenState extends State<FinScreen> {
-  int _categoryCount = 0;
+  List<dynamic> categories = [];
   List<dynamic> currencies = [];
   List<dynamic> paymentTypes = [];
 
@@ -38,9 +33,9 @@ class _FinScreenState extends State<FinScreen> {
         .get()
         .then((snapshot) {
       if (snapshot.exists) {
-        final categories = snapshot.data()!['categories'] as List<dynamic>;
+        final category = snapshot.data()!['categories'] as List<dynamic>;
         setState(() {
-          _categoryCount = categories.length;
+          categories = category;
         });
       }
     });
@@ -49,7 +44,6 @@ class _FinScreenState extends State<FinScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[100],
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -60,11 +54,10 @@ class _FinScreenState extends State<FinScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => GenerativeTransactionScreen(
-                    parentScreen: const FinScreen(),
+                  builder: (context) => const NewTransactionScreen(
+                    parentScreen: FinScreen(),
                     isCamera: false,
-                    paymentTypes: paymentTypes,
-                    currencies: currencies,
+                    parentJson: {},
                   ),
                 ),
               );
@@ -78,11 +71,10 @@ class _FinScreenState extends State<FinScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => GenerativeTransactionScreen(
-                    parentScreen: const FinScreen(),
+                  builder: (context) => const NewTransactionScreen(
+                    parentScreen: FinScreen(),
                     isCamera: true,
-                    paymentTypes: paymentTypes,
-                    currencies: currencies,
+                    parentJson: {},
                   ),
                 ),
               );
@@ -91,44 +83,43 @@ class _FinScreenState extends State<FinScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          AnimatedGradient(gradientTheme: GradientTheme.finColors),
-          CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                pinned: false,
-                snap: false,
-                floating: false,
-                expandedHeight: 150.0,
-                elevation: 5,
-                stretch: true,
-                backgroundColor: Colors.transparent,
-                flexibleSpace: FlexibleSpaceBar(
-                  title: Text(
-                    DateFormat.MMMM('en_US').format(DateTime.now()),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  background: const MoneyBar(),
+      body: CustomScrollView(
+        cacheExtent: 1000,
+        slivers: [
+          SliverAppBar(
+            pinned: false,
+            snap: false,
+            floating: false,
+            expandedHeight: 150.0,
+            elevation: 5,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(
+                DateFormat.MMMM('en_US').format(DateTime.now()),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              _categoryCount == 0
-                  ? const SliverToBoxAdapter(
-                      child: Center(child: CircularProgressIndicator()))
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        childCount: _categoryCount,
-                        (BuildContext context, int index) {
-                          return categoryStream(index);
-                        },
-                      ),
-                    ),
-            ],
+              background: const MoneyBar(),
+            ),
           ),
+          categories.isEmpty
+              ? const SliverToBoxAdapter(
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    childCount: categories.length + 1,
+                    (BuildContext context, int index) {
+                      if (index == categories.length) {
+                        return Container(height: 150);
+                      }
+                      return categoryStream(index);
+                    },
+                  ),
+                ),
         ],
       ),
     );
@@ -143,11 +134,11 @@ class _FinScreenState extends State<FinScreen> {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final userData = snapshot.data!.data() as Map<String, dynamic>;
-          final categories = userData['categories'] as List<dynamic>;
-          final category = categories[index];
+          categories = userData['categories'] as List<dynamic>;
           currencies = userData['currencies'] as List<dynamic>;
           paymentTypes = userData['paymentTypes'] as List<dynamic>;
 
+          final category = categories[index];
           final int codepoint = category['codepoint'];
           final int colorValue = category['colorValue'];
           final String type = category['type'];
@@ -171,59 +162,46 @@ class _FinScreenState extends State<FinScreen> {
   }) {
     return Padding(
       padding: const EdgeInsets.all(15),
-      child: SizedBox(
-        height: 210,
-        child: Stack(
-          alignment: Alignment.center,
+      child: Card(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Align(
-              alignment: const Alignment(0, 25),
-              child: Card(
-                child: SizedBox(height: 200, child: _getTransactions(type)),
-              ),
-            ),
-            Align(
-              alignment: const Alignment(0, -1),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  InkWell(
-                    onTap: () {},
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Color(colorValue),
-                        shape: BoxShape.circle,
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: InkWell(
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CategoryTransactionScreen(
+                        parentScreen: const FinScreen(),
+                        type: type,
                       ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CategoryTransactionScreen(
-                                  parentScreen: const FinScreen(),
-                                  type: type,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Icon(
-                            IconData(codepoint, fontFamily: 'MaterialIcons'),
-                            color: ContrastCalculator.getIconColor(
-                              Color(colorValue),
-                            ),
-                          ),
-                        ),
+                    ),
+                  );
+                },
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Color(colorValue),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      IconData(codepoint, fontFamily: 'MaterialIcons'),
+                      color: ContrastCalculator.getIconColor(
+                        Color(colorValue),
                       ),
                     ),
                   ),
-                  Text(type)
-                ],
+                  title: Text(type),
+                ),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
+              child: _getTransactions(type),
             ),
           ],
         ),
@@ -239,7 +217,7 @@ class _FinScreenState extends State<FinScreen> {
           .collection('transactions')
           .where('category', isEqualTo: type)
           .orderBy('timestamp', descending: true)
-          .limit(3)
+          .limit(2)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -256,25 +234,38 @@ class _FinScreenState extends State<FinScreen> {
         }
 
         return ListView.builder(
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: snapshot.data!.docs.length,
           itemBuilder: (context, index) {
             var doc = snapshot.data!.docs[index];
             final String store = doc['store'];
-            final String totalPrice = doc['total_price'];
+            final String totalPrice = doc['total_price'].toStringAsFixed(2);
             final String currency = doc['currency'];
             final Timestamp timestamp = doc['timestamp'];
+
+            Map<String, dynamic> jsonData = {
+              "items": doc['items'],
+              "pieces": doc['pieces'],
+              "prices": doc['prices'],
+              "store": doc['store'],
+              "total_price": doc['total_price'],
+              "currency": doc['currency'],
+              "payment": doc['payment'],
+              "category": doc['category'],
+              'timestamp': doc['timestamp']
+            };
+
 
             return InkWell(
               onTap: () {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => TransactionScreen(
-                      doc: doc,
-                      currencies: currencies,
-                      paymentTypes: paymentTypes,
+                    builder: (context) => NewTransactionScreen(
                       parentScreen: const FinScreen(),
+                      parentJson: jsonData,
                     ),
                   ),
                 );

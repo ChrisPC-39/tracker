@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../utils/GeminiUtils.dart';
 import '../widgets/DateFormatter.dart';
+import 'new_transaction_screen.dart';
 import 'transaction_screen.dart';
 
 class CategoryTransactionScreen extends StatefulWidget {
@@ -35,8 +37,8 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
         );
       },
       child: Scaffold(
-        backgroundColor: Colors.lightGreen[400],
         appBar: AppBar(
+          elevation: 5,
           leading: IconButton(
             onPressed: () {
               Navigator.pushReplacement(
@@ -90,27 +92,64 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
 
                 return ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: snapshot.data!.docs.length,
+                  itemCount: snapshot.data!.docs.length + 1,
                   itemBuilder: (context, index) {
+                    if (index == snapshot.data!.docs.length) {
+                      return InkWell(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => NewTransactionScreen(
+                                parentScreen: CategoryTransactionScreen(
+                                  parentScreen: widget.parentScreen,
+                                  type: widget.type,
+                                ),
+                                parentJson: const {},
+                              ),
+                            ),
+                          );
+                        },
+                        child: ListTile(
+                          title: Text(
+                            "Create new",
+                            style: TextStyle(color: Colors.grey[700]),
+                          ),
+                          leading: Icon(Icons.add, color: Colors.grey[700]),
+                        ),
+                      );
+                    }
+
                     var doc = snapshot.data!.docs[index];
                     final String store = doc['store'];
-                    final String totalPrice = doc['total_price'];
+                    final String totalPrice =
+                        doc['total_price'].toStringAsFixed(2);
                     final String currency = doc['currency'];
                     final Timestamp timestamp = doc['timestamp'];
+
+                    Map<String, dynamic> jsonData = {
+                      "items": doc['items'],
+                      "pieces": doc['pieces'],
+                      "prices": doc['prices'],
+                      "store": doc['store'],
+                      "total_price": doc['total_price'],
+                      "currency": doc['currency'],
+                      "payment": doc['payment'],
+                      "category": doc['category'],
+                      'timestamp': doc['timestamp']
+                    };
 
                     return InkWell(
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => TransactionScreen(
-                              doc: doc,
-                              currencies: currencies,
-                              paymentTypes: paymentTypes,
+                            builder: (context) => NewTransactionScreen(
                               parentScreen: CategoryTransactionScreen(
                                 parentScreen: widget.parentScreen,
                                 type: widget.type,
                               ),
+                              parentJson: jsonData,
                             ),
                           ),
                         );
@@ -119,9 +158,39 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                         title: Text(store),
                         subtitle:
                             Text(DateFormatter.formatTimestamp(timestamp)),
-                        trailing: Text(
-                          "-$totalPrice $currency",
-                          style: const TextStyle(fontSize: 16),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "-$totalPrice $currency",
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            IconButton(
+                              onPressed: () async {
+                                final DocumentReference? transactionRef =
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth
+                                            .instance.currentUser!.uid)
+                                        .collection('transactions')
+                                        .where('timestamp',
+                                            isEqualTo: jsonData['timestamp'])
+                                        .get()
+                                        .then((snapshot) {
+                                  if (snapshot.docs.isNotEmpty) {
+                                    return snapshot.docs.first.reference;
+                                  } else {
+                                    return null;
+                                  }
+                                });
+                                transactionRef!.delete();
+                              },
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.grey,
+                              ),
+                            )
+                          ],
                         ),
                       ),
                     );
