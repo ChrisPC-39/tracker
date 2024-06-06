@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-Future<void> showOptionsDialog({
+Future<void> showDeleteDialog({
   required Function() onPressed,
   required String actionText,
   required BuildContext context,

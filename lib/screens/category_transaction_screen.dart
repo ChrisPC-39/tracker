@@ -364,7 +364,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                               return null;
                             }
                           });
-                          showOptionsDialog(
+                          showDeleteDialog(
                             titleText: "Delete image",
                             context: context,
                             actionText: "Delete",

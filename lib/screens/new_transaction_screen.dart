@@ -858,7 +858,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                     ),
                   ),
                   onTap: () {
-                    showOptionsDialog(
+                    showDeleteDialog(
                       context: context,
                       titleText: "Delete transaction",
                       actionText: "Delete",

@@ -51,6 +51,51 @@ class _FinScreenState extends State<FinScreen> {
     });
   }
 
+  Future<void> updateCategoryName(
+      Map<String, dynamic> userData,
+      int index,
+      DocumentReference ref,
+      String newVal,
+      int colorVal,
+      int codePoint,
+      ) async {
+    final itemCategories = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection('transactions')
+        .where('category', isEqualTo: userData['categories'][index]['type'])
+        .get();
+
+    for (var transaction in itemCategories.docs) {
+      transaction.reference.update({'category': newVal});
+    }
+
+    userData['categories'][index]['type'] = newVal;
+    userData['categories'][index]['colorValue'] = colorVal;
+    userData['categories'][index]['codepoint'] = codePoint;
+    ref.update({'categories': userData['categories']});
+  }
+
+  Future<void> removeCategory(
+      Map<String, dynamic> userData,
+      int index,
+      DocumentReference ref,
+      ) async {
+    final itemCategories = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection('transactions')
+        .where('category', isEqualTo: userData['categories'][index]['type'])
+        .get();
+
+    for (var transaction in itemCategories.docs) {
+      transaction.reference.update({'category': ''});
+    }
+
+    userData['categories'].removeAt(index);
+    ref.update({'categories': userData['categories']});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -206,51 +251,6 @@ class _FinScreenState extends State<FinScreen> {
     );
   }
 
-  Future<void> updateCategoryName(
-    Map<String, dynamic> userData,
-    int index,
-    DocumentReference ref,
-    String newVal,
-    int colorVal,
-    int codePoint,
-  ) async {
-    final itemCategories = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .collection('transactions')
-        .where('category', isEqualTo: userData['categories'][index]['type'])
-        .get();
-
-    for (var transaction in itemCategories.docs) {
-      transaction.reference.update({'category': newVal});
-    }
-
-    userData['categories'][index]['type'] = newVal;
-    userData['categories'][index]['colorValue'] = colorVal;
-    userData['categories'][index]['codepoint'] = codePoint;
-    ref.update({'categories': userData['categories']});
-  }
-
-  Future<void> removeCategory(
-    Map<String, dynamic> userData,
-    int index,
-    DocumentReference ref,
-  ) async {
-    final itemCategories = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .collection('transactions')
-        .where('category', isEqualTo: userData['categories'][index]['type'])
-        .get();
-
-    for (var transaction in itemCategories.docs) {
-      transaction.reference.update({'category': ''});
-    }
-
-    userData['categories'].removeAt(index);
-    ref.update({'categories': userData['categories']});
-  }
-
   Widget categoryStream(int index) {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
@@ -301,7 +301,7 @@ class _FinScreenState extends State<FinScreen> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(10),
                 onLongPress: () {
-                  showOptionsDialog(
+                  showDeleteDialog(
                     actionText: "Delete",
                     context: context,
                     titleText: "Delete category",
@@ -354,29 +354,6 @@ class _FinScreenState extends State<FinScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  // onLongPress: () {
-                  //   showOptionsDialog(
-                  //     actionText: "Delete",
-                  //     context: context,
-                  //     titleText: "Delete category",
-                  //     onPressed: () async {
-                  //       Map<String, dynamic> userData =
-                  //           snapshot.data!.data() as Map<String, dynamic>;
-                  //       final DocumentReference ref = snapshot.data!.reference;
-                  //       await removeCategory(
-                  //         userData,
-                  //         index,
-                  //         ref,
-                  //       );
-                  //       Navigator.pushReplacement(
-                  //         context,
-                  //         MaterialPageRoute(
-                  //           builder: (context) => const FinScreen(),
-                  //         ),
-                  //       );
-                  //     },
-                  //   );
-                  // },
                   leading: Container(
                     width: 40,
                     height: 40,
@@ -468,7 +445,7 @@ class _FinScreenState extends State<FinScreen> {
                 );
               },
               onLongPress: () {
-                showOptionsDialog(
+                showDeleteDialog(
                   titleText: "Delete transaction",
                   context: context,
                   actionText: "Delete",
