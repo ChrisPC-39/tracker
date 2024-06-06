@@ -1,17 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 
-import '../utils/GeminiUtils.dart';
-import '../widgets/ContrastCalculator.dart';
-import '../widgets/DateFormatter.dart';
+import '../utils/ColorUtils.dart';
+import '../utils/DateFormatter.dart';
 import '../widgets/MyTextfield.dart';
 import '../widgets/OptionsDialog.dart';
 import 'new_transaction_screen.dart';
-import 'transaction_screen.dart';
 
 class CategoryTransactionScreen extends StatefulWidget {
   final String type;
@@ -182,7 +179,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                       borderRadius: BorderRadius.circular(90),
                       child: Icon(
                         IconData(codepoint, fontFamily: 'MaterialIcons'),
-                        color: ContrastCalculator.getIconColor(
+                        color: ColorUtils.getIconColor(
                           Color(colorValue),
                         ),
                       ),

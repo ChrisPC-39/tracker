@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class ContrastCalculator {
+class ColorUtils {
   static double calculateContrast(Color color1, Color color2) {
     // Calculate luminance for both colors
     final luminance1 = 0.2126 * color1.red + 0.7152 * color1.green + 0.0722 * color1.blue;

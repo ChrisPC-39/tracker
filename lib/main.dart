@@ -5,6 +5,8 @@ import 'firebase_options.dart';
 import 'screens/auth_screens/login_screen.dart';
 import 'screens/fin_screen.dart';
 
+//flutter build apk --no-tree-shake-icons
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(

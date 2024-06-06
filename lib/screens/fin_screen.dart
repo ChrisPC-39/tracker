@@ -3,13 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../widgets/ContrastCalculator.dart';
-import '../widgets/DateFormatter.dart';
+import '../utils/ColorUtils.dart';
+import '../utils/DateFormatter.dart';
 import '../widgets/MoneyBar.dart';
 import '../widgets/OptionsDialog.dart';
 import 'category_transaction_screen.dart';
 import 'new_transaction_screen.dart';
-import 'transaction_screen.dart';
 
 class FinScreen extends StatefulWidget {
   const FinScreen({Key? key}) : super(key: key);
@@ -193,7 +192,7 @@ class _FinScreenState extends State<FinScreen> {
                   ),
                   child: Icon(
                     IconData(codepoint, fontFamily: 'MaterialIcons'),
-                    color: ContrastCalculator.getIconColor(
+                    color: ColorUtils.getIconColor(
                       Color(colorValue),
                     ),
                   ),
@@ -387,7 +386,7 @@ class _FinScreenState extends State<FinScreen> {
                     ),
                     child: Icon(
                       IconData(codepoint, fontFamily: 'MaterialIcons'),
-                      color: ContrastCalculator.getIconColor(
+                      color: ColorUtils.getIconColor(
                         Color(colorValue),
                       ),
                     ),

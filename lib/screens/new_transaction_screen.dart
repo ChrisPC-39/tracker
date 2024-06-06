@@ -1,19 +1,15 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:finance_tracker/widgets/ContrastCalculator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_vertexai/firebase_vertexai.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../utils/GeminiUtils.dart';
 import '../utils/ParseUtils.dart';
-import '../widgets/CustomSnackBar.dart';
 import '../widgets/MyTextfield.dart';
 import '../widgets/OptionsDialog.dart';
 
