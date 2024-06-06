@@ -8,7 +8,7 @@ import '../utils/ColorUtils.dart';
 import '../utils/DateFormatter.dart';
 import '../widgets/MyTextfield.dart';
 import '../widgets/OptionsDialog.dart';
-import 'new_transaction_screen.dart';
+import 'transaction_screen.dart';
 
 class CategoryTransactionScreen extends StatefulWidget {
   final String type;
@@ -247,7 +247,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => NewTransactionScreen(
+                                builder: (context) => TransactionScreen(
                                   parentScreen: CategoryTransactionScreen(
                                     parentScreen: widget.parentScreen,
                                     type: widget.type,
@@ -286,7 +286,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => NewTransactionScreen(
+                                builder: (context) => TransactionScreen(
                                   parentScreen: CategoryTransactionScreen(
                                     parentScreen: widget.parentScreen,
                                     type: widget.type,
@@ -334,7 +334,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => NewTransactionScreen(
+                              builder: (context) => TransactionScreen(
                                 parentScreen: CategoryTransactionScreen(
                                   parentScreen: widget.parentScreen,
                                   type: widget.type,

@@ -8,7 +8,7 @@ import '../utils/DateFormatter.dart';
 import '../widgets/MoneyBar.dart';
 import '../widgets/OptionsDialog.dart';
 import 'category_transaction_screen.dart';
-import 'new_transaction_screen.dart';
+import 'transaction_screen.dart';
 
 class FinScreen extends StatefulWidget {
   const FinScreen({Key? key}) : super(key: key);
@@ -109,7 +109,7 @@ class _FinScreenState extends State<FinScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const NewTransactionScreen(
+                  builder: (context) => const TransactionScreen(
                     parentScreen: FinScreen(),
                     isCamera: false,
                     parentJson: {},
@@ -127,7 +127,7 @@ class _FinScreenState extends State<FinScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const NewTransactionScreen(
+                  builder: (context) => const TransactionScreen(
                     parentScreen: FinScreen(),
                     isCamera: true,
                     parentJson: {},
@@ -436,7 +436,7 @@ class _FinScreenState extends State<FinScreen> {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => NewTransactionScreen(
+                    builder: (context) => TransactionScreen(
                       parentScreen: const FinScreen(),
                       parentJson: jsonData,
                       parentCategory: jsonData['category'],
