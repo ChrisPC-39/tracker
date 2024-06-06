@@ -231,9 +231,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
           ),
           floatingActionButton: Column(
+            key: UniqueKey(),
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FloatingActionButton(
+                heroTag: "transactionScreenMini",
                 key: UniqueKey(),
                 mini: true,
                 child: const Icon(Icons.add_photo_alternate_outlined),
@@ -243,6 +245,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
               ),
               const SizedBox(height: 15),
               FloatingActionButton(
+                heroTag: "transactionScreen",
                 key: UniqueKey(),
                 child: const Icon(Icons.save_outlined),
                 onPressed: () async {
@@ -718,11 +721,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
               backgroundColor: Colors.transparent,
               body: _buildImageList(setState),
               floatingActionButton: Column(
+                key: UniqueKey(),
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Visibility(
                     visible: erroneousFileIndices.isNotEmpty,
                     child: FloatingActionButton(
+                      heroTag: "imageButtonMini",
                       mini: true,
                       key: UniqueKey(),
                       onPressed: () {
@@ -737,6 +742,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   ),
                   const SizedBox(height: 15),
                   FloatingActionButton(
+                    heroTag: "imageButton",
                     key: UniqueKey(),
                     onPressed: () async {
                       if (files.isEmpty) {

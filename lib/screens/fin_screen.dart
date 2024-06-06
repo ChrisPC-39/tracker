@@ -100,6 +100,7 @@ class _FinScreenState extends State<FinScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: Column(
+        key: UniqueKey(),
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
@@ -210,7 +211,6 @@ class _FinScreenState extends State<FinScreen> {
                 MaterialPageRoute(
                   builder: (context) => CategoryTransactionScreen(
                     parentScreen: const FinScreen(),
-                    type: "",
                     codePoint: Icons.category_outlined.codePoint,
                     colorValue: Colors.transparent.value,
                     callBack: (newVal, colorValue, codepoint) {},

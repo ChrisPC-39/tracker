@@ -11,7 +11,7 @@ import '../widgets/OptionsDialog.dart';
 import 'transaction_screen.dart';
 
 class CategoryTransactionScreen extends StatefulWidget {
-  final String type;
+  final String? type;
   final int codePoint;
   final int colorValue;
   final Widget parentScreen;
@@ -20,7 +20,7 @@ class CategoryTransactionScreen extends StatefulWidget {
   const CategoryTransactionScreen({
     Key? key,
     required this.parentScreen,
-    required this.type,
+    this.type,
     required this.callBack,
     required this.codePoint,
     required this.colorValue,
@@ -44,7 +44,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
   void initState() {
     super.initState();
 
-    categoryName = widget.type;
+    categoryName = widget.type ?? "";
     codepoint = widget.codePoint;
     colorValue = widget.colorValue;
     pickerColor = Color(widget.colorValue);
@@ -147,7 +147,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
               },
               icon: const Icon(Icons.arrow_back),
             ),
-            title: widget.type == ""
+            title: widget.type == null
                 ? const Text("No category")
                 : MyTextField(
                     text: categoryName,
@@ -199,6 +199,8 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                 colorValue != widget.colorValue ||
                 categoryName != widget.type,
             child: FloatingActionButton(
+              heroTag: "categoryTransactionScreen",
+              key: UniqueKey(),
               onPressed: () {
                 widget.callBack(categoryName, colorValue, codepoint);
                 Navigator.pushReplacement(
@@ -233,7 +235,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                     .collection('users')
                     .doc(FirebaseAuth.instance.currentUser!.uid)
                     .collection('transactions')
-                    .where('category', isEqualTo: widget.type)
+                    .where('category', isEqualTo: widget.type ?? "")
                     .orderBy('timestamp', descending: true)
                     .snapshots(),
                 builder: (context, snapshot) {
@@ -261,7 +263,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                                     codePoint: codepoint,
                                   ),
                                   parentJson: const {},
-                                  parentCategory: widget.type,
+                                  parentCategory: categoryName,
                                 ),
                               ),
                             );
@@ -300,7 +302,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                                     codePoint: codepoint,
                                   ),
                                   parentJson: const {},
-                                  parentCategory: widget.type,
+                                  parentCategory: categoryName,
                                 ),
                               ),
                             );
