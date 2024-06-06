@@ -173,18 +173,53 @@ class _FinScreenState extends State<FinScreen> {
                 )
               : SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    childCount: categories.length + 2,
+                    childCount: categories.length + 3,
                     (BuildContext context, int index) {
-                      if (index == categories.length) {
-                        return _buildEmptyCategory();
+                      if(index == 0) {
+                        return _buildMenu();
                       }
                       if (index == categories.length + 1) {
+                        return _buildEmptyCategory();
+                      }
+                      if (index == categories.length + 2) {
                         return Container(height: 150);
                       }
-                      return categoryStream(index);
+                      return categoryStream(index - 1);
                     },
                   ),
                 ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenu() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 20),
+      child: Row(
+        children: [
+          TextButton(
+            onPressed: () {
+            },
+            child: const Icon(Icons.settings, color: Colors.grey),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CategoryTransactionScreen(
+                    parentScreen: const FinScreen(),
+                    type: "",
+                    codePoint: Icons.category_outlined.codePoint,
+                    colorValue: Colors.transparent.value,
+                    callBack: (newVal, colorValue, codepoint) {},
+                  ),
+                ),
+              );
+            },
+            child: const Icon(Icons.category_outlined, color: Colors.grey),
+          ),
         ],
       ),
     );

@@ -147,40 +147,45 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
               },
               icon: const Icon(Icons.arrow_back),
             ),
-            title: MyTextField(
-              text: categoryName,
-              fontSize: 20,
-              textInputType: TextInputType.text,
-              hintText: 'Category',
-              onSubmitted: (newVal) {
-                categoryName = newVal;
-              },
-              onChanged: (newVal) {
-                categoryName = newVal;
-              },
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8, left: 8),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Color(colorValue),
-                    shape: BoxShape.circle,
+            title: widget.type == ""
+                ? const Text("No category")
+                : MyTextField(
+                    text: categoryName,
+                    fontSize: 20,
+                    textInputType: TextInputType.text,
+                    hintText: 'Category',
+                    onSubmitted: (newVal) {
+                      categoryName = newVal;
+                    },
+                    onChanged: (newVal) {
+                      categoryName = newVal;
+                    },
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        _showColorAndIconPicker();
-                        setState(() {});
-                      },
-                      borderRadius: BorderRadius.circular(90),
-                      child: Icon(
-                        IconData(codepoint, fontFamily: 'MaterialIcons'),
-                        color: ColorUtils.getIconColor(
-                          Color(colorValue),
+            actions: [
+              Visibility(
+                visible: categoryName != "",
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8, left: 8),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Color(colorValue),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          _showColorAndIconPicker();
+                          setState(() {});
+                        },
+                        borderRadius: BorderRadius.circular(90),
+                        child: Icon(
+                          IconData(codepoint, fontFamily: 'MaterialIcons'),
+                          color: ColorUtils.getIconColor(
+                            Color(colorValue),
+                          ),
                         ),
                       ),
                     ),
