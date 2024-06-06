@@ -89,8 +89,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Padding(
                         padding: const EdgeInsets.only(left: 15, right: 15),
                         child: ElevatedButton(
-                          onPressed: () {
-                            FirebaseAuth.instance.signOut();
+                          onPressed: () async {
+                            await FirebaseAuth.instance.signOut();
+                            setState(() {});
                           },
                           child: const Text("Sign out"),
                         ),

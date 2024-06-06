@@ -87,7 +87,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       categories = userDoc.get('categories') as List<dynamic>;
       currencies = userDoc['currencies'] as List<dynamic>;
       paymentTypes = userDoc['paymentTypes'] as List<dynamic>;
-      jsonData['currency'] = currencies.first;
+      jsonData['currency'] = currencies.isEmpty ? "" : currencies.first;
       _isLoading = false;
     });
   }

@@ -13,7 +13,7 @@ class MoneyBar extends StatefulWidget {
 
 class _MoneyBarState extends State<MoneyBar> {
   double progress = 0;
-  double monthlyAllowance = 0;
+  List<double> monthlyAllowance = [];
   double totalSpent = 0;
   String currency = "";
   List<dynamic> currencies = [];
@@ -32,45 +32,16 @@ class _MoneyBarState extends State<MoneyBar> {
         .get();
 
     setState(() {
-      monthlyAllowance = ParseUtils.parseDoubleFromString(
-          userDoc['monthly_allowance'].toString());
+      for (int i = 0; i < userDoc['monthly_allowance'].length; i++) {
+        monthlyAllowance.add(ParseUtils.parseDoubleFromString(
+            userDoc['monthly_allowance'][i].toString()));
+      }
       currencies = userDoc.get('currencies') as List<dynamic>;
 
       if (currencies.isNotEmpty) {
         currency = currencies.first;
       } else {
         currency = "";
-      }
-    });
-  }
-
-  Future<void> _calculateTotalSpent(String currency) async {
-    DateTime now = DateTime.now();
-    int currentMonth = now.month;
-    int currentYear = now.year;
-
-    QuerySnapshot transactions = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .collection('transactions')
-        .where('timestamp',
-            isGreaterThanOrEqualTo: DateTime(currentYear, currentMonth))
-        .where('timestamp', isLessThan: DateTime(currentYear, currentMonth + 1))
-        .where('currency', isEqualTo: currency)
-        .get();
-
-    double total = 0;
-    for (QueryDocumentSnapshot doc in transactions.docs) {
-      total += ParseUtils.parseDoubleFromString(doc['total_price']);
-    }
-
-    setState(() {
-      totalSpent = total;
-      progress = totalSpent / monthlyAllowance;
-      if (progress > 1.0) {
-        progress = 1.0;
-      } else if (progress < 0.0 || progress.isNaN) {
-        progress = 0.0;
       }
     });
   }
@@ -92,7 +63,7 @@ class _MoneyBarState extends State<MoneyBar> {
                 width: 8,
                 decoration: BoxDecoration(
                   color: index == currentCurrencyIndex
-                      ? totalSpent > monthlyAllowance
+                      ? totalSpent > monthlyAllowance[index]
                           ? Colors.red[400]
                           : Colors.purple[400]
                       : Colors.grey[300],
@@ -163,7 +134,7 @@ class _MoneyBarState extends State<MoneyBar> {
           }
 
           totalSpent = total;
-          progress = totalSpent / monthlyAllowance;
+          progress = totalSpent / monthlyAllowance[index];
           if (progress > 1.0) {
             progress = 1.0;
           } else if (progress < 0.0 || progress.isNaN) {
@@ -195,7 +166,7 @@ class _MoneyBarState extends State<MoneyBar> {
                       child: AnimatedContainer(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(15),
-                          color: totalSpent > monthlyAllowance
+                          color: totalSpent > monthlyAllowance[index]
                               ? Colors.red[300]
                               : Colors.purple[300],
                         ),
@@ -207,7 +178,7 @@ class _MoneyBarState extends State<MoneyBar> {
                     ),
                   ),
                   Text(
-                    "${currency == currencies[index] ? totalSpent.toStringAsFixed(2) : 0.0} / ${monthlyAllowance.toStringAsFixed(0)}",
+                    "${currency == currencies[index] ? totalSpent.toStringAsFixed(2) : 0.0} / ${monthlyAllowance[index].toStringAsFixed(0)}",
                     style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
