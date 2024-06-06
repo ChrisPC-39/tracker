@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -231,12 +233,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
           ),
           floatingActionButton: Column(
-            key: UniqueKey(),
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               FloatingActionButton(
                 heroTag: "transactionScreenMini",
-                key: UniqueKey(),
+                key: const Key("transactionScreenMini"),
                 mini: true,
                 child: const Icon(Icons.add_photo_alternate_outlined),
                 onPressed: () {
@@ -246,7 +247,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
               const SizedBox(height: 15),
               FloatingActionButton(
                 heroTag: "transactionScreen",
-                key: UniqueKey(),
+                key: const Key("transactionScreen"),
                 child: const Icon(Icons.save_outlined),
                 onPressed: () async {
                   try {
@@ -286,7 +287,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                       ),
                     );
                   } catch (e) {
-                    print("Error adding transaction: $e");
+                    print("Error: $e");
                   }
                 },
               ),
@@ -603,6 +604,58 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
+  Future<void> _showNewCategoryDialog() async {
+    String? newType;
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add New Category'),
+          content: TextField(
+            onChanged: (value) {
+              newType = value;
+            },
+            decoration: const InputDecoration(
+              hintText: 'Enter new category',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (newType != null && newType!.isNotEmpty) {
+                  final newCategory = {
+                    'codepoint': Icons.add.codePoint,
+                    'colorValue': Colors.grey.value,
+                    'type': newType,
+                  };
+                  FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .update({
+                    'categories': FieldValue.arrayUnion([newCategory])
+                  }).then((value) {
+                    setState(() {
+                      categories.add(newCategory);
+                    });
+                    Navigator.pop(context);
+                  });
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _showNewCurrencyDialog() async {
     String? newCurrency;
 
@@ -660,7 +713,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       ),
       onChanged: (value) {
         if (value == 'Add New Category') {
-          // _showNewCurrencyDialog();
+          _showNewCategoryDialog();
         } else {
           setState(() {
             jsonData['category'] = value.toString();
@@ -721,15 +774,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
               backgroundColor: Colors.transparent,
               body: _buildImageList(setState),
               floatingActionButton: Column(
-                key: UniqueKey(),
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Visibility(
                     visible: erroneousFileIndices.isNotEmpty,
                     child: FloatingActionButton(
                       heroTag: "imageButtonMini",
+                      key: const Key("imageButtonMini"),
                       mini: true,
-                      key: UniqueKey(),
                       onPressed: () {
                         for (int i = 0; i < erroneousFileIndices.length; i++) {
                           files.removeAt(erroneousFileIndices[i]);
@@ -743,7 +795,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   const SizedBox(height: 15),
                   FloatingActionButton(
                     heroTag: "imageButton",
-                    key: UniqueKey(),
+                    key: const Key("imageButton"),
                     onPressed: () async {
                       if (files.isEmpty) {
                         return;
@@ -769,10 +821,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
                       if (imageToTextList.isNotEmpty) {
                         Navigator.of(context).pop();
-                        // jsonData = await sendFilesToAI(filteredImages);
-                        // jsonData = await sendPromptToAI(
-                        //   imageToTextList.toString(),
-                        // );
                         Map<String, dynamic> output = await sendPromptToAI(
                           imageToTextList.toString(),
                         );
@@ -798,7 +846,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
       if (map1[key] is List && map2[key] is List) {
         combinedMap[key] = [...map1[key], ...map2[key]];
       } else {
-        combinedMap[key] = map1[key];
+        combinedMap[key] = map2[key];
+        // if(map1[key] is String && map1[key].isEmpty) {
+        //   combinedMap[key] = map2[key];
+        // } else {
+        //   combinedMap[key] = map1[key];
+        // }
       }
     }
     return combinedMap;

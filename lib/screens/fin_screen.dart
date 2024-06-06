@@ -8,6 +8,7 @@ import '../utils/DateFormatter.dart';
 import '../widgets/MoneyBar.dart';
 import '../widgets/OptionsDialog.dart';
 import 'category_transaction_screen.dart';
+import 'settings_screen.dart';
 import 'transaction_screen.dart';
 
 class FinScreen extends StatefulWidget {
@@ -52,13 +53,13 @@ class _FinScreenState extends State<FinScreen> {
   }
 
   Future<void> updateCategoryName(
-      Map<String, dynamic> userData,
-      int index,
-      DocumentReference ref,
-      String newVal,
-      int colorVal,
-      int codePoint,
-      ) async {
+    Map<String, dynamic> userData,
+    int index,
+    DocumentReference ref,
+    String newVal,
+    int colorVal,
+    int codePoint,
+  ) async {
     final itemCategories = await FirebaseFirestore.instance
         .collection('users')
         .doc(FirebaseAuth.instance.currentUser!.uid)
@@ -77,10 +78,10 @@ class _FinScreenState extends State<FinScreen> {
   }
 
   Future<void> removeCategory(
-      Map<String, dynamic> userData,
-      int index,
-      DocumentReference ref,
-      ) async {
+    Map<String, dynamic> userData,
+    int index,
+    DocumentReference ref,
+  ) async {
     final itemCategories = await FirebaseFirestore.instance
         .collection('users')
         .doc(FirebaseAuth.instance.currentUser!.uid)
@@ -100,11 +101,11 @@ class _FinScreenState extends State<FinScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: Column(
-        key: UniqueKey(),
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
             heroTag: "normalButton",
+            key: const Key("normalButton"),
             mini: true,
             onPressed: () {
               Navigator.pushReplacement(
@@ -124,6 +125,7 @@ class _FinScreenState extends State<FinScreen> {
           const SizedBox(height: 10),
           FloatingActionButton(
             heroTag: "cameraButton",
+            key: const Key("cameraButton"),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -176,7 +178,7 @@ class _FinScreenState extends State<FinScreen> {
                   delegate: SliverChildBuilderDelegate(
                     childCount: categories.length + 3,
                     (BuildContext context, int index) {
-                      if(index == 0) {
+                      if (index == 0) {
                         return _buildMenu();
                       }
                       if (index == categories.length + 1) {
@@ -201,6 +203,14 @@ class _FinScreenState extends State<FinScreen> {
         children: [
           TextButton(
             onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(
+                    parentScreen: FinScreen(),
+                  ),
+                ),
+              );
             },
             child: const Icon(Icons.settings, color: Colors.grey),
           ),

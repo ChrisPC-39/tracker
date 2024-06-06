@@ -200,7 +200,7 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                 categoryName != widget.type,
             child: FloatingActionButton(
               heroTag: "categoryTransactionScreen",
-              key: UniqueKey(),
+              key: const Key("categoryTransactionScreen"),
               onPressed: () {
                 widget.callBack(categoryName, colorValue, codepoint);
                 Navigator.pushReplacement(
@@ -288,31 +288,35 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                     itemCount: snapshot.data!.docs.length + 1,
                     itemBuilder: (context, index) {
                       if (index == snapshot.data!.docs.length) {
-                        return InkWell(
-                          onTap: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TransactionScreen(
-                                  parentScreen: CategoryTransactionScreen(
-                                    parentScreen: widget.parentScreen,
-                                    type: widget.type,
-                                    callBack: widget.callBack,
-                                    colorValue: colorValue,
-                                    codePoint: codepoint,
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 15, right: 15),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(10),
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TransactionScreen(
+                                    parentScreen: CategoryTransactionScreen(
+                                      parentScreen: widget.parentScreen,
+                                      type: widget.type,
+                                      callBack: widget.callBack,
+                                      colorValue: colorValue,
+                                      codePoint: codepoint,
+                                    ),
+                                    parentJson: const {},
+                                    parentCategory: categoryName,
                                   ),
-                                  parentJson: const {},
-                                  parentCategory: categoryName,
                                 ),
+                              );
+                            },
+                            child: ListTile(
+                              title: Text(
+                                "Create new",
+                                style: TextStyle(color: Colors.grey[700]),
                               ),
-                            );
-                          },
-                          child: ListTile(
-                            title: Text(
-                              "Create new",
-                              style: TextStyle(color: Colors.grey[700]),
+                              leading: Icon(Icons.add, color: Colors.grey[700]),
                             ),
-                            leading: Icon(Icons.add, color: Colors.grey[700]),
                           ),
                         );
                       }
@@ -336,63 +340,72 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
                         'timestamp': doc['timestamp']
                       };
 
-                      return InkWell(
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TransactionScreen(
-                                parentScreen: CategoryTransactionScreen(
-                                  parentScreen: widget.parentScreen,
-                                  type: widget.type,
-                                  callBack: widget.callBack,
-                                  colorValue: colorValue,
-                                  codePoint: codepoint,
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          left: 15,
+                          right: 15,
+                          bottom: 7.5,
+                          top: 7.5,
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TransactionScreen(
+                                  parentScreen: CategoryTransactionScreen(
+                                    parentScreen: widget.parentScreen,
+                                    type: widget.type,
+                                    callBack: widget.callBack,
+                                    colorValue: colorValue,
+                                    codePoint: codepoint,
+                                  ),
+                                  parentJson: jsonData,
+                                  parentCategory: jsonData['category'],
                                 ),
-                                parentJson: jsonData,
-                                parentCategory: jsonData['category'],
                               ),
+                            );
+                          },
+                          onLongPress: () async {
+                            final DocumentReference? transactionRef =
+                                await FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                                    .collection('transactions')
+                                    .where('timestamp',
+                                        isEqualTo: jsonData['timestamp'])
+                                    .get()
+                                    .then((snapshot) {
+                              if (snapshot.docs.isNotEmpty) {
+                                return snapshot.docs.first.reference;
+                              } else {
+                                return null;
+                              }
+                            });
+                            showDeleteDialog(
+                              titleText: "Delete image",
+                              context: context,
+                              actionText: "Delete",
+                              onPressed: () {
+                                transactionRef!.delete();
+                                Navigator.of(context).pop();
+                              },
+                            );
+                          },
+                          child: ListTile(
+                            title: Text(store),
+                            subtitle:
+                                Text(DateFormatter.formatTimestamp(timestamp)),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "-$totalPrice $currency",
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        onLongPress: () async {
-                          final DocumentReference? transactionRef =
-                              await FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(FirebaseAuth.instance.currentUser!.uid)
-                                  .collection('transactions')
-                                  .where('timestamp',
-                                      isEqualTo: jsonData['timestamp'])
-                                  .get()
-                                  .then((snapshot) {
-                            if (snapshot.docs.isNotEmpty) {
-                              return snapshot.docs.first.reference;
-                            } else {
-                              return null;
-                            }
-                          });
-                          showDeleteDialog(
-                            titleText: "Delete image",
-                            context: context,
-                            actionText: "Delete",
-                            onPressed: () {
-                              transactionRef!.delete();
-                              Navigator.of(context).pop();
-                            },
-                          );
-                        },
-                        child: ListTile(
-                          title: Text(store),
-                          subtitle:
-                              Text(DateFormatter.formatTimestamp(timestamp)),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                "-$totalPrice $currency",
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                            ],
                           ),
                         ),
                       );
