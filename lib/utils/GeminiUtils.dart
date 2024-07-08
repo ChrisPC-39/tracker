@@ -29,8 +29,6 @@ class GeminiUtils {
     Map<String, dynamic> jsonData = jsonDecode(output);
     Map<String, dynamic> validatedJson = {};
 
-    print(jsonData);
-
     try {
       List<String> items = List<String>.from(jsonData['items']);
       validatedJson['items'] = items;
@@ -70,9 +68,9 @@ class GeminiUtils {
 
     try {
       String payment = jsonData['payment'];
-      validatedJson['payment'] = payment;
+      validatedJson['payment'] = payment.toLowerCase();
     } catch (e) {
-      validatedJson['payment'] = "Other";
+      validatedJson['payment'] = "other";
     }
 
     try {
@@ -83,11 +81,41 @@ class GeminiUtils {
     }
 
     try {
-      String totalPrice = jsonData['total_price'];
+      double totalPrice = jsonData['total_price'];
       validatedJson['total_price'] = totalPrice;
     } catch (e) {
       validatedJson['total_price'] = 0.0;
     }
+
+    validatedJson = expandArrays(validatedJson);
+
+    return validatedJson;
+  }
+
+  Map<String, dynamic> expandArrays(Map<String, dynamic> validatedJson) {
+    List<dynamic> items = validatedJson['items'] ?? [];
+    List<dynamic> pieces = validatedJson['pieces'] ?? [];
+    List<dynamic> prices = validatedJson['prices'] ?? [];
+
+    // Determine the length of the longest array
+    int maxLength = [items.length, pieces.length, prices.length].reduce((a, b) => a > b ? a : b);
+
+    // Function to expand an array to the specified length
+    void expandList(List<dynamic> list, int length, dynamic val) {
+      while (list.length < length) {
+        list.add(val);  // Adding null as the empty value
+      }
+    }
+
+    // Expand each array to the maxLength
+    expandList(items, maxLength, "Unknown");
+    expandList(pieces, maxLength, 0.0);
+    expandList(prices, maxLength, 0.0);
+
+    // Update the validatedJson map with the expanded arrays
+    validatedJson['items'] = items;
+    validatedJson['pieces'] = pieces;
+    validatedJson['prices'] = prices;
 
     return validatedJson;
   }
