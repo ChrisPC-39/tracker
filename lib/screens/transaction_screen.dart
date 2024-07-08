@@ -50,7 +50,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
     "store": "Transaction",
     "total_price": 0.0,
     "currency": "",
-    "payment": "Card",
+    "payment": "card",
     "category": "",
   };
 
@@ -139,7 +139,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
       setState(() {
         _isGenerating = false;
-        _hasChangedAmountOrPrice = true;
+        // _hasChangedAmountOrPrice = true;
       });
 
       return GeminiUtils().validateOutput(response.text!);
@@ -573,7 +573,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Widget _buildCurrencyMenu() {
     return DropdownButton(
-      value: jsonData['currency'].isEmpty
+      value: jsonData['currency'].isEmpty || !currencies.contains(jsonData['currency'])
           ? currencies.first
           : jsonData['currency'].toLowerCase(),
       alignment: Alignment.center,
@@ -680,13 +680,28 @@ class _TransactionScreenState extends State<TransactionScreen> {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 if (newCurrency != null && newCurrency!.isNotEmpty) {
+                  DocumentSnapshot userDoc = await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .get();
+
+                  List<double> monthlyAllowance = [];
+                  for (int i = 0;
+                      i < userDoc['monthly_allowance'].length;
+                      i++) {
+                    monthlyAllowance.add(ParseUtils.parseDoubleFromString(
+                        userDoc['monthly_allowance'][i].toString()));
+                  }
+                  monthlyAllowance.add(1000);
+
                   FirebaseFirestore.instance
                       .collection('users')
                       .doc(FirebaseAuth.instance.currentUser!.uid)
                       .update({
-                    'currencies': FieldValue.arrayUnion([newCurrency])
+                    'currencies': FieldValue.arrayUnion([newCurrency]),
+                    'monthly_allowance': monthlyAllowance
                   }).then((value) {
                     setState(() {
                       currencies.add(newCurrency!);
@@ -847,11 +862,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
         combinedMap[key] = [...map1[key], ...map2[key]];
       } else {
         combinedMap[key] = map2[key];
-        // if(map1[key] is String && map1[key].isEmpty) {
-        //   combinedMap[key] = map2[key];
-        // } else {
-        //   combinedMap[key] = map1[key];
-        // }
       }
     }
     return combinedMap;
