@@ -1,16 +1,8 @@
 # finance_tracker
 
-An automatic finance tracker
+Digitalize your receipts! Take or upload a picture of a receipt and let Gemini AI fill in everything from the receipt: items bought with respective quanitities and prices, currency, total price, category, date and store name in the app.
 
-## Getting Started
+## Note
 
-This project is a starting point for a Flutter application.
+This app is currently available only for Android APKs. Web UI is in development.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
