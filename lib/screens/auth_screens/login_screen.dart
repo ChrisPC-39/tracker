@@ -49,26 +49,31 @@ class _LoginScreenState extends State<LoginScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-            child: InputFormWidget(
-              actionText: "Login",
-              textButton: TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SignupScreen(),
-                    ),
-                  );
-                },
-                child: const Text(
-                  'Create an account',
+          child: Container(
+            constraints: const BoxConstraints(
+              maxWidth: 600
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: InputFormWidget(
+                actionText: "Login",
+                textButton: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SignupScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Create an account',
+                  ),
                 ),
+                signInCallback: (String email, String pwd) {
+                  _signInWithEmailAndPassword(email, pwd);
+                },
               ),
-              signInCallback: (String email, String pwd) {
-                _signInWithEmailAndPassword(email, pwd);
-              },
             ),
           ),
         ),

@@ -211,209 +211,216 @@ class _CategoryTransactionScreenState extends State<CategoryTransactionScreen> {
               child: const Icon(Icons.save_outlined),
             ),
           ),
-          body: StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .doc(FirebaseAuth.instance.currentUser!.uid)
-                .snapshots(),
-            builder: (context, userSnapshot) {
-              if (userSnapshot.hasError) {
-                return Center(child: Text('Error: ${userSnapshot.error}'));
-              }
-
-              if (userSnapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              final userData =
-                  userSnapshot.data!.data() as Map<String, dynamic>;
-              currencies = userData['currencies'] as List<dynamic>;
-              paymentTypes = userData['paymentTypes'] as List<dynamic>;
-
-              return StreamBuilder<QuerySnapshot>(
+          body: Center(
+            child: Container(
+              constraints: const BoxConstraints(
+                  maxWidth: 600
+              ),
+              child: StreamBuilder<DocumentSnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('users')
                     .doc(FirebaseAuth.instance.currentUser!.uid)
-                    .collection('transactions')
-                    .where('category', isEqualTo: widget.type ?? "")
-                    .orderBy('timestamp', descending: true)
                     .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  // Handle empty collection
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return Column(
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TransactionScreen(
-                                  parentScreen: CategoryTransactionScreen(
-                                    parentScreen: widget.parentScreen,
-                                    type: widget.type,
-                                    callBack: widget.callBack,
-                                    colorValue: colorValue,
-                                    codePoint: codepoint,
-                                  ),
-                                  parentJson: const {},
-                                  parentCategory: categoryName,
-                                ),
-                              ),
-                            );
-                          },
-                          child: ListTile(
-                            title: Text(
-                              "Create new",
-                              style: TextStyle(color: Colors.grey[700]),
-                            ),
-                            leading: Icon(Icons.add, color: Colors.grey[700]),
-                          ),
-                        ),
-                        const Align(
-                            alignment: Alignment.center,
-                            child: Text('No transactions found')),
-                      ],
-                    );
+                builder: (context, userSnapshot) {
+                  if (userSnapshot.hasError) {
+                    return Center(child: Text('Error: ${userSnapshot.error}'));
                   }
 
-                  return ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: snapshot.data!.docs.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == snapshot.data!.docs.length) {
-                        return Padding(
-                          padding: const EdgeInsets.only(left: 15, right: 15),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(10),
-                            onTap: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => TransactionScreen(
-                                    parentScreen: CategoryTransactionScreen(
-                                      parentScreen: widget.parentScreen,
-                                      type: widget.type,
-                                      callBack: widget.callBack,
-                                      colorValue: colorValue,
-                                      codePoint: codepoint,
+                  if (userSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final userData =
+                      userSnapshot.data!.data() as Map<String, dynamic>;
+                  currencies = userData['currencies'] as List<dynamic>;
+                  paymentTypes = userData['paymentTypes'] as List<dynamic>;
+
+                  return StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser!.uid)
+                        .collection('transactions')
+                        .where('category', isEqualTo: widget.type ?? "")
+                        .orderBy('timestamp', descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      // Handle empty collection
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return Column(
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TransactionScreen(
+                                      parentScreen: CategoryTransactionScreen(
+                                        parentScreen: widget.parentScreen,
+                                        type: widget.type,
+                                        callBack: widget.callBack,
+                                        colorValue: colorValue,
+                                        codePoint: codepoint,
+                                      ),
+                                      parentJson: const {},
+                                      parentCategory: categoryName,
                                     ),
-                                    parentJson: const {},
-                                    parentCategory: categoryName,
                                   ),
+                                );
+                              },
+                              child: ListTile(
+                                title: Text(
+                                  "Create new",
+                                  style: TextStyle(color: Colors.grey[700]),
                                 ),
-                              );
-                            },
-                            child: ListTile(
-                              title: Text(
-                                "Create new",
-                                style: TextStyle(color: Colors.grey[700]),
+                                leading: Icon(Icons.add, color: Colors.grey[700]),
                               ),
-                              leading: Icon(Icons.add, color: Colors.grey[700]),
                             ),
-                          ),
+                            const Align(
+                                alignment: Alignment.center,
+                                child: Text('No transactions found')),
+                          ],
                         );
                       }
 
-                      var doc = snapshot.data!.docs[index];
-                      final String store = doc['store'];
-                      final String totalPrice =
-                          doc['total_price'].toStringAsFixed(2);
-                      final String currency = doc['currency'];
-                      final Timestamp timestamp = doc['timestamp'];
-
-                      Map<String, dynamic> jsonData = {
-                        "items": doc['items'],
-                        "pieces": doc['pieces'],
-                        "prices": doc['prices'],
-                        "store": doc['store'],
-                        "total_price": doc['total_price'],
-                        "currency": doc['currency'],
-                        "payment": doc['payment'],
-                        "category": doc['category'],
-                        'timestamp': doc['timestamp']
-                      };
-
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          left: 15,
-                          right: 15,
-                          bottom: 7.5,
-                          top: 7.5,
-                        ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(10),
-                          onTap: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TransactionScreen(
-                                  parentScreen: CategoryTransactionScreen(
-                                    parentScreen: widget.parentScreen,
-                                    type: widget.type,
-                                    callBack: widget.callBack,
-                                    colorValue: colorValue,
-                                    codePoint: codepoint,
+                      return ListView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: snapshot.data!.docs.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index == snapshot.data!.docs.length) {
+                            return Padding(
+                              padding: const EdgeInsets.only(left: 15, right: 15),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(10),
+                                onTap: () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TransactionScreen(
+                                        parentScreen: CategoryTransactionScreen(
+                                          parentScreen: widget.parentScreen,
+                                          type: widget.type,
+                                          callBack: widget.callBack,
+                                          colorValue: colorValue,
+                                          codePoint: codepoint,
+                                        ),
+                                        parentJson: const {},
+                                        parentCategory: categoryName,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: ListTile(
+                                  title: Text(
+                                    "Create new",
+                                    style: TextStyle(color: Colors.grey[700]),
                                   ),
-                                  parentJson: jsonData,
-                                  parentCategory: jsonData['category'],
+                                  leading: Icon(Icons.add, color: Colors.grey[700]),
                                 ),
                               ),
                             );
-                          },
-                          onLongPress: () async {
-                            final DocumentReference? transactionRef =
-                                await FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(FirebaseAuth.instance.currentUser!.uid)
-                                    .collection('transactions')
-                                    .where('timestamp',
-                                        isEqualTo: jsonData['timestamp'])
-                                    .get()
-                                    .then((snapshot) {
-                              if (snapshot.docs.isNotEmpty) {
-                                return snapshot.docs.first.reference;
-                              } else {
-                                return null;
-                              }
-                            });
-                            showDeleteDialog(
-                              titleText: "Delete image",
-                              context: context,
-                              actionText: "Delete",
-                              onPressed: () {
-                                transactionRef!.delete();
-                                Navigator.of(context).pop();
-                              },
-                            );
-                          },
-                          child: ListTile(
-                            title: Text(store),
-                            subtitle:
-                                Text(DateFormatter.formatTimestamp(timestamp)),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  "-$totalPrice $currency",
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ],
+                          }
+
+                          var doc = snapshot.data!.docs[index];
+                          final String store = doc['store'];
+                          final String totalPrice =
+                              doc['total_price'].toStringAsFixed(2);
+                          final String currency = doc['currency'];
+                          final Timestamp timestamp = doc['timestamp'];
+
+                          Map<String, dynamic> jsonData = {
+                            "items": doc['items'],
+                            "pieces": doc['pieces'],
+                            "prices": doc['prices'],
+                            "store": doc['store'],
+                            "total_price": doc['total_price'],
+                            "currency": doc['currency'],
+                            "payment": doc['payment'],
+                            "category": doc['category'],
+                            'timestamp': doc['timestamp']
+                          };
+
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              left: 15,
+                              right: 15,
+                              bottom: 7.5,
+                              top: 7.5,
                             ),
-                          ),
-                        ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TransactionScreen(
+                                      parentScreen: CategoryTransactionScreen(
+                                        parentScreen: widget.parentScreen,
+                                        type: widget.type,
+                                        callBack: widget.callBack,
+                                        colorValue: colorValue,
+                                        codePoint: codepoint,
+                                      ),
+                                      parentJson: jsonData,
+                                      parentCategory: jsonData['category'],
+                                    ),
+                                  ),
+                                );
+                              },
+                              onLongPress: () async {
+                                final DocumentReference? transactionRef =
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth.instance.currentUser!.uid)
+                                        .collection('transactions')
+                                        .where('timestamp',
+                                            isEqualTo: jsonData['timestamp'])
+                                        .get()
+                                        .then((snapshot) {
+                                  if (snapshot.docs.isNotEmpty) {
+                                    return snapshot.docs.first.reference;
+                                  } else {
+                                    return null;
+                                  }
+                                });
+                                showDeleteDialog(
+                                  titleText: "Delete image",
+                                  context: context,
+                                  actionText: "Delete",
+                                  onPressed: () {
+                                    transactionRef!.delete();
+                                    Navigator.of(context).pop();
+                                  },
+                                );
+                              },
+                              child: ListTile(
+                                title: Text(store),
+                                subtitle:
+                                    Text(DateFormatter.formatTimestamp(timestamp)),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      "-$totalPrice $currency",
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                   );
                 },
-              );
-            },
+              ),
+            ),
           ),
         ),
       ),

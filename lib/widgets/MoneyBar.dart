@@ -12,6 +12,7 @@ class MoneyBar extends StatefulWidget {
 }
 
 class _MoneyBarState extends State<MoneyBar> {
+  PageController pageController = PageController();
   double progress = 0;
   List<double> monthlyAllowance = [];
   double totalSpent = 0;
@@ -57,17 +58,24 @@ class _MoneyBarState extends State<MoneyBar> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(currencies.length, (index) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                height: 8,
-                width: 8,
-                decoration: BoxDecoration(
-                  color: index == currentCurrencyIndex
-                      ? totalSpent > monthlyAllowance[index]
-                          ? Colors.red[400]
-                          : Colors.purple[400]
-                      : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(50),
+              return GestureDetector(
+                onTap: () => pageController.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.bounceIn,
+                ),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  height: 8,
+                  width: 8,
+                  decoration: BoxDecoration(
+                    color: index == currentCurrencyIndex
+                        ? totalSpent > monthlyAllowance[index]
+                            ? Colors.red[400]
+                            : Colors.purple[400]
+                        : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(50),
+                  ),
                 ),
               );
             }),
@@ -75,6 +83,7 @@ class _MoneyBarState extends State<MoneyBar> {
           SizedBox(
             height: 75,
             child: PageView.builder(
+              controller: pageController,
               scrollDirection: Axis.horizontal,
               itemCount: currencies.length,
               onPageChanged: (newPageIndex) {
@@ -90,18 +99,6 @@ class _MoneyBarState extends State<MoneyBar> {
           ),
         ],
       ),
-      // child: RotatedBox(
-      //   quarterTurns: -1,
-      //   child: ListWheelScrollView(
-      //     itemExtent: 250,
-      //     onSelectedItemChanged: (newIndex) {
-      //       currency = currencies[newIndex];
-      //       setState(() {});
-      //     },
-      //     children: List.generate(
-      //         currencies.length, (index) => _buildCurrency(index)),
-      //   ),
-      // ),
     );
   }
 

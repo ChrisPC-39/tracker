@@ -296,38 +296,45 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : Stack(
-                  children: [
-                    PageView(
-                      physics: const NeverScrollableScrollPhysics(),
-                      controller: pageController,
+              : Center(
+                child: Container(
+                  constraints: const BoxConstraints(
+                      maxWidth: 600
+                  ),
+                  child: Stack(
                       children: [
-                        // _buildImagePage(),
-                        _buildTransactionPage(),
-                      ],
-                    ),
-                    Visibility(
-                      visible: _isGenerating,
-                      child: Container(
-                        color: Colors.black.withOpacity(0.5),
-                        height: MediaQuery.of(context).size.height,
-                        width: MediaQuery.of(context).size.width,
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        PageView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          controller: pageController,
                           children: [
-                            Text(
-                              "Processing... please wait",
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.white),
-                            ),
-                            SizedBox(height: 10),
-                            Center(child: CircularProgressIndicator()),
+                            // _buildImagePage(),
+                            _buildTransactionPage(),
                           ],
                         ),
-                      ),
+                        Visibility(
+                          visible: _isGenerating,
+                          child: Container(
+                            color: Colors.black.withOpacity(0.5),
+                            height: MediaQuery.of(context).size.height,
+                            width: MediaQuery.of(context).size.width,
+                            child: const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Processing... please wait",
+                                  style:
+                                      TextStyle(fontSize: 20, color: Colors.white),
+                                ),
+                                SizedBox(height: 10),
+                                Center(child: CircularProgressIndicator()),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
                 ),
+              ),
         ),
       ),
     );

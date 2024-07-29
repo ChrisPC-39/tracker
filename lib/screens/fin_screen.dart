@@ -143,55 +143,62 @@ class _FinScreenState extends State<FinScreen> {
           ),
         ],
       ),
-      body: CustomScrollView(
-        cacheExtent: 1000,
-        slivers: [
-          SliverAppBar(
-            pinned: false,
-            snap: false,
-            floating: false,
-            expandedHeight: 150.0,
-            elevation: 5,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                DateFormat.MMMM('en_US').format(DateTime.now()),
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              background: const MoneyBar(),
-            ),
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(
+              maxWidth: 600
           ),
-          _isLoadingCategories
-              ? SliverToBoxAdapter(
-                  child: Center(
-                    child: Column(
-                      children: [
-                        const CircularProgressIndicator(),
-                        _buildEmptyCategory(),
-                      ],
+          child: CustomScrollView(
+            cacheExtent: 1000,
+            slivers: [
+              SliverAppBar(
+                pinned: false,
+                snap: false,
+                floating: false,
+                expandedHeight: 150.0,
+                elevation: 5,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    DateFormat.MMMM('en_US').format(DateTime.now()),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                )
-              : SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    childCount: categories.length + 3,
-                    (BuildContext context, int index) {
-                      if (index == 0) {
-                        return _buildMenu();
-                      }
-                      if (index == categories.length + 1) {
-                        return _buildEmptyCategory();
-                      }
-                      if (index == categories.length + 2) {
-                        return Container(height: 150);
-                      }
-                      return categoryStream(index - 1);
-                    },
-                  ),
+                  background: const MoneyBar(),
                 ),
-        ],
+              ),
+              _isLoadingCategories
+                  ? SliverToBoxAdapter(
+                      child: Center(
+                        child: Column(
+                          children: [
+                            const CircularProgressIndicator(),
+                            _buildEmptyCategory(),
+                          ],
+                        ),
+                      ),
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        childCount: categories.length + 3,
+                        (BuildContext context, int index) {
+                          if (index == 0) {
+                            return _buildMenu();
+                          }
+                          if (index == categories.length + 1) {
+                            return _buildEmptyCategory();
+                          }
+                          if (index == categories.length + 2) {
+                            return Container(height: 150);
+                          }
+                          return categoryStream(index - 1);
+                        },
+                      ),
+                    ),
+            ],
+          ),
+        ),
       ),
     );
   }

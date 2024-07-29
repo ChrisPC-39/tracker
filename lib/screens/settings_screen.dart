@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../utils/ParseUtils.dart';
@@ -98,61 +99,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        cacheExtent: 1000,
-        slivers: [
-          SliverAppBar(
-            pinned: false,
-            snap: false,
-            floating: false,
-            expandedHeight: 150.0,
-            elevation: 5,
-            leading: IconButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => widget.parentScreen),
-                );
-              },
-              icon: const Icon(Icons.arrow_back),
-            ),
-            flexibleSpace: const FlexibleSpaceBar(
-              title: Icon(
-                Icons.account_circle_rounded,
-                color: Colors.grey,
-                size: 45,
-              ),
-              centerTitle: true,
-            ),
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(
+              maxWidth: 600
           ),
-          _isLoadingUsers
-              ? const SliverToBoxAdapter(
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              : SliverList(
-                  delegate: SliverChildListDelegate(
-                    [
-                      _buildAccountInformation(),
-                      SizedBox(
-                        height: 75,
-                        child: _buildAllowanceInformation(),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 15, right: 15),
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            await FirebaseAuth.instance.signOut();
-                            setState(() {});
-                          },
-                          child: const Text("Sign out"),
-                        ),
-                      ),
-                    ],
-                  ),
+          child: CustomScrollView(
+            cacheExtent: 1000,
+            slivers: [
+              SliverAppBar(
+                pinned: false,
+                snap: false,
+                floating: false,
+                expandedHeight: 150.0,
+                elevation: 5,
+                leading: IconButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => widget.parentScreen),
+                    );
+                  },
+                  icon: const Icon(Icons.arrow_back),
                 ),
-        ],
+                flexibleSpace: const FlexibleSpaceBar(
+                  title: Icon(
+                    Icons.account_circle_rounded,
+                    color: Colors.grey,
+                    size: 45,
+                  ),
+                  centerTitle: true,
+                ),
+              ),
+              _isLoadingUsers
+                  ? const SliverToBoxAdapter(
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : SliverList(
+                      delegate: SliverChildListDelegate(
+                        [
+                          _buildAccountInformation(),
+                          SizedBox(
+                            height: kIsWeb ? 100 : 75,
+                            child: _buildAllowanceInformation(),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 15, right: 15),
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                await FirebaseAuth.instance.signOut();
+                                setState(() {});
+                              },
+                              child: const Text("Sign out"),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ],
+          ),
+        ),
       ),
     );
   }

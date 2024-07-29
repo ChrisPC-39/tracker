@@ -118,26 +118,31 @@ class _SignupScreenState extends State<SignupScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-            child: InputFormWidget(
-              actionText: "Signup",
-              textButton: TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
-                    ),
-                  );
-                },
-                child: const Text(
-                  'Back to login',
+          child: Container(
+            constraints: const BoxConstraints(
+                maxWidth: 600
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: InputFormWidget(
+                actionText: "Signup",
+                textButton: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Back to login',
+                  ),
                 ),
+                signInCallback: (String email, String pwd) {
+                  _signUpWithEmailAndPassword(email, pwd);
+                },
               ),
-              signInCallback: (String email, String pwd) {
-                _signUpWithEmailAndPassword(email, pwd);
-              },
             ),
           ),
         ),
