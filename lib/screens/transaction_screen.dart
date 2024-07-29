@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_vertexai/firebase_vertexai.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
@@ -126,7 +127,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       model: GeminiUtils.model,
       systemInstruction: Content.system(GeminiUtils.getFinInstructions(
         ParseUtils.getCategoriesAsStringList(categories),
-        ParseUtils.getDynamicListAsStringList(paymentTypes),
+        ParseUtils.getDynamicListAsStringList(currencies),
       )),
     );
 
@@ -153,7 +154,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       model: GeminiUtils.model,
       systemInstruction: Content.system(GeminiUtils.getFinInstructions(
         ParseUtils.getCategoriesAsStringList(categories),
-        ParseUtils.getDynamicListAsStringList(paymentTypes),
+        ParseUtils.getDynamicListAsStringList(currencies),
       )),
     );
 
@@ -573,7 +574,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Widget _buildCurrencyMenu() {
     return DropdownButton(
-      value: jsonData['currency'].isEmpty || !currencies.contains(jsonData['currency'])
+      value: jsonData['currency'].isEmpty ||
+              !currencies.contains(jsonData['currency'])
           ? currencies.first
           : jsonData['currency'].toLowerCase(),
       alignment: Alignment.center,
@@ -816,6 +818,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
                         return;
                       }
 
+                      if(kIsWeb) {
+                        Navigator.of(context).pop();
+                        Map<String, dynamic> output = await sendFilesToAI(files);
+                        jsonData = mergeMaps(jsonData, output);
+
+                        return;
+                      }
+
                       List<String> imageToTextList = [];
                       List<XFile?> filteredImages = [];
                       setState(() {
@@ -903,12 +913,19 @@ class _TransactionScreenState extends State<TransactionScreen> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: Image.file(
-                  File(files[index]!.path),
-                  width: double.maxFinite,
-                  height: double.maxFinite,
-                  fit: BoxFit.fill,
-                ),
+                child: kIsWeb
+                    ? Image.network(
+                        files[index]!.path,
+                        width: double.maxFinite,
+                        height: double.maxFinite,
+                        fit: BoxFit.fill,
+                      )
+                    : Image.file(
+                        File(files[index]!.path),
+                        width: double.maxFinite,
+                        height: double.maxFinite,
+                        fit: BoxFit.fill,
+                      ),
               ),
               Material(
                 color: Colors.transparent,
