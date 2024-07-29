@@ -6,7 +6,7 @@ Take or upload a picture of a receipt and let Gemini AI fill in everything from 
 
 ## Note
 
-- This app is currently available only for Android APKs or Web. Desktop UI is in development. It works, but it's ugly
+- This app is currently available only for Android APKs or Web. Desktop Web UI is still in development. It works, but it is a bit ugly!
 - This app uses Firebase for Firestore and Authentication, however the firebase_options.dart file is not in the repository. Make your own! 
 
 ## Access the app
