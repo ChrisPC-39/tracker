@@ -46,31 +46,5 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyD00sofD1eyiS0cLtI-QwgfO7U0FETT5Y8',
-    appId: '1:744644128541:web:aa9e2798f3598c3402bbf4',
-    messagingSenderId: '744644128541',
-    projectId: 'tracker-f7299',
-    authDomain: 'tracker-f7299.firebaseapp.com',
-    storageBucket: 'tracker-f7299.appspot.com',
-    measurementId: 'G-DYXYN9VNWJ',
-  );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC0f8NLRfp4mFaU_7JKbQPXw00m9LDfKJc',
-    appId: '1:744644128541:android:44cd0ca7a6f2d15c02bbf4',
-    messagingSenderId: '744644128541',
-    projectId: 'tracker-f7299',
-    storageBucket: 'tracker-f7299.appspot.com',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyD00sofD1eyiS0cLtI-QwgfO7U0FETT5Y8',
-    appId: '1:744644128541:web:2b536aaaab00c7ec02bbf4',
-    messagingSenderId: '744644128541',
-    projectId: 'tracker-f7299',
-    authDomain: 'tracker-f7299.firebaseapp.com',
-    storageBucket: 'tracker-f7299.appspot.com',
-    measurementId: 'G-5NW416BXN2',
-  );
 }
